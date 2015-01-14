@@ -4,6 +4,6 @@
 
 
 int main(void)
- {
-	
- }
+{
+	SendData(65535);
+}

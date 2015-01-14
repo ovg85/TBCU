@@ -70,7 +70,7 @@ FORMAT = ihex
 
 
 # Target file name (without extension).
-TARGET = main
+TARGET = tbcu
 
 
 # Object files directory
@@ -80,7 +80,7 @@ OBJDIR = .
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c 
+SRC = main.c display.c
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
