@@ -2,8 +2,6 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-volatile char digits[]={0x40,0x79,0x24,0x30,0x19,0x12,0x02,0x78,0x00,0x10};
-
 void SendData(unsigned int data)
 {
 	for (int i=0;i<16;i++)
