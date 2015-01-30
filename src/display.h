@@ -15,6 +15,7 @@
 #define SYMBOL_C 0xC6
 #define SYMBOL_U 0xC1
 #define SYMBOL_DASH 0xBF
+#define SYMBOL_DP 0x7F
 
 #define DATA 0
 #define SCL 1
