@@ -47,8 +47,8 @@ int main()
 
 void Init (void)
 {
-	DDRD=0x07;	//PD0-PD2 как выход
-	PORTD=0x00;	//Первоначально выключаем выход
+	DDR_DISP=0x07;	//PD0-PD2 как выход
+	PORT_DISP=0x00;	//Первоначально выключаем выход
 }
 
 unsigned int GetDataToDisplay(void)
