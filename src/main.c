@@ -6,20 +6,25 @@
 #define HI 0
 #define LO 1
 #define CUR 2
+#define ITEMS_COUNT 3
 #define LIT_COUNT 2
 #define DIG_COUNT 4
 #define PLACE_COUNT 6
 
-#define SWITCH_DELAY 3000
+#define TCNT1_INITIAL 62535;
+
 
 void Init (void);
 unsigned int GetDataToDisplay(void);
 void ShowHi(void);
 void ShowLow(void);
 void ShowCurrent(void);
+void ShowCurrentDigit(void);
+void SetNextDisplayItem(void);
 
 char currentDisplay[]={0,0,0,0,0,0};
 char currentDislpayIndex=0;
+char currentDislpayItemIndex=0;
 
 int main(void)
 {
@@ -31,19 +36,20 @@ int main(void)
 	
 	while(1)
 	{
-		ShowHi();
-		_delay_ms(SWITCH_DELAY);
-		ShowLow();
-		_delay_ms(SWITCH_DELAY);
-		ShowCurrent();
-		_delay_ms(SWITCH_DELAY);
+		
 	}
 	return 1;
 }
 
 ISR(TIMER0_OVF_vect)
 {
-	showCurrentDigit();
+	ShowCurrentDigit();
+}
+
+ISR( TIMER1_OVF_vect )
+{
+	TCNT1 = TCNT1_INITIAL;  //выставляем начальное значение TCNT1
+	SetNextDisplayItem();
 }
 
 
@@ -57,6 +63,12 @@ void Init (void)
 	TIMSK=(1<<TOIE0); 		//Timer/Counter0 Overflow Interrupt Enable
 	TIFR=(1<<TOV0);		//Timer/Counter0 Overflow Flag
 	
+	//1000000/1024/3000 ~ 0.325 sec
+	TCCR1B = (1<<CS12)|(1<<CS10);	//Prescaler 1024
+	TIMSK |= (1<<TOIE1); 			//Timer/Counter1 Overflow Interrupt Enable
+	TCNT1 = TCNT1_INITIAL;        	// start counter value 
+  
+  
 	//for TIMER2_COMP_vect
 	//TCCR2=(1<<CS22)|(1<<CS21);	//Prescaler 256
 	//TCNT2=0x00;					//initial counter = 0
@@ -65,7 +77,7 @@ void Init (void)
 	
 }
 
-void showCurrentDigit(void)
+void ShowCurrentDigit(void)
 {
 	unsigned int data=GetDataToDisplay();
 	SendData(data);	
@@ -74,6 +86,35 @@ void showCurrentDigit(void)
 	{
 		currentDislpayIndex=0;
 	}
+}
+
+void SetNextDisplayItem(void)
+{
+	currentDislpayItemIndex=currentDislpayItemIndex+1;
+	if(currentDislpayItemIndex==ITEMS_COUNT)
+	{
+		currentDislpayItemIndex=0;
+	}
+	
+	  switch (currentDislpayItemIndex)
+	  {
+	    case (HI):
+	      ShowHi();
+	      break;
+	
+	    case (LO):
+	      ShowLow();
+	      break;
+	
+	    case (CUR):
+	      ShowCurrent();
+	      break;
+	
+	    default:
+	      ShowCurrent();
+	      break;
+	  }
+	
 }
 
 unsigned int GetDataToDisplay(void)
