@@ -10,7 +10,7 @@
 #define DIG_COUNT 4
 #define PLACE_COUNT 6
 
-#define SWITCH_DELAY 5000
+#define SWITCH_DELAY 3000
 
 void Init (void);
 unsigned int GetDataToDisplay(void);
@@ -41,8 +41,31 @@ int main(void)
 	return 1;
 }
 
+ISR(TIMER0_OVF_vect)
+{
+	showCurrentDigit();
+}
 
-ISR(TIMER2_COMP_vect)
+
+void Init (void)
+{
+	DDR_DISP=0x07;	//PD0-PD2 как выход
+	PORT_DISP=0x00;	//Первоначально выключаем выход
+	
+	TCCR0=(1<<CS02);		//Prescaler 256
+	TCNT0=0x00;				//initial counter = 0
+	TIMSK=(1<<TOIE0); 		//Timer/Counter0 Overflow Interrupt Enable
+	TIFR=(1<<TOV0);		//Timer/Counter0 Overflow Flag
+	
+	//for TIMER2_COMP_vect
+	//TCCR2=(1<<CS22)|(1<<CS21);	//Prescaler 256
+	//TCNT2=0x00;					//initial counter = 0
+	//TIMSK=(1<<OCIE2); 			//  Timer/Counter2 Output Compare Match Interrupt Enable
+	//OCR2 = 20; 					// interrupt at counter = 20
+	
+}
+
+void showCurrentDigit(void)
 {
 	unsigned int data=GetDataToDisplay();
 	SendData(data);	
@@ -51,18 +74,6 @@ ISR(TIMER2_COMP_vect)
 	{
 		currentDislpayIndex=0;
 	}
-}
-
-void Init (void)
-{
-	DDR_DISP=0x07;	//PD0-PD2 как выход
-	PORT_DISP=0x00;	//Первоначально выключаем выход
-	
-	TCCR2=(1<<CS22)|(1<<CS21)|(1<<CS20);	//Prescaler 1024
-	TCNT2=0x00;								//initial counter = 0
-	TIMSK=(1<<OCIE2); 						// Enable CTC interrupt
-	OCR2 = 10; 								// interrupt at counter = 1
-	
 }
 
 unsigned int GetDataToDisplay(void)
