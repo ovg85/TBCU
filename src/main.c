@@ -11,19 +11,28 @@
 #define DIG_COUNT 4
 #define PLACE_COUNT 6
 
-#define TCNT1_INITIAL 62535;
+#define TCNT1_INITIAL 61535;
 
-
+//Init
 void Init (void);
+//Prepare data to send to display
 unsigned int GetDataToDisplay(void);
+//Copy Hi temperature to currentDisplay array
 void ShowHi(void);
+//Copy Low temperature to currentDisplay array
 void ShowLow(void);
+//Copy Current temperature to currentDisplay array
 void ShowCurrent(void);
+//Displaying one digit of currentDisplay array at display
 void ShowCurrentDigit(void);
+//Sets Hi, Low or Current temperature to currentDisplay array
 void SetNextDisplayItem(void);
 
+//Current data to display
 char currentDisplay[]={0,0,0,0,0,0};
+// Current dislpayed digit (from 0 to 5)
 char currentDislpayIndex=0;
+// HI, Low or Current temperature
 char currentDislpayItemIndex=0;
 
 int main(void)
@@ -36,7 +45,7 @@ int main(void)
 	
 	while(1)
 	{
-		
+
 	}
 	return 1;
 }
@@ -58,12 +67,12 @@ void Init (void)
 	DDR_DISP=0x07;	//PD0-PD2 как выход
 	PORT_DISP=0x00;	//Первоначально выключаем выход
 	
-	TCCR0=(1<<CS02);		//Prescaler 256
+	TCCR0=(1<<CS01);		//Prescaler 8
 	TCNT0=0x00;				//initial counter = 0
 	TIMSK=(1<<TOIE0); 		//Timer/Counter0 Overflow Interrupt Enable
 	TIFR=(1<<TOV0);		//Timer/Counter0 Overflow Flag
 	
-	//1000000/1024/3000 ~ 0.325 sec
+	//1000000/1024/4000 ~ 0.244 sec
 	TCCR1B = (1<<CS12)|(1<<CS10);	//Prescaler 1024
 	TIMSK |= (1<<TOIE1); 			//Timer/Counter1 Overflow Interrupt Enable
 	TCNT1 = TCNT1_INITIAL;        	// start counter value 
@@ -139,8 +148,8 @@ void ShowLow(void)
 {
 	currentDisplay[0]=SYMBOL_L;
 	currentDisplay[1]=SYMBOL_O;
-	currentDisplay[2]=SYMBOL_DASH;
-	currentDisplay[3]=SYMBOL_EMPTY;
+	currentDisplay[2]=SYMBOL_EMPTY;
+	currentDisplay[3]=SYMBOL_DASH;
 	currentDisplay[4]=digits[2]&SYMBOL_DP;
 	currentDisplay[5]=digits[7];
 }
@@ -149,8 +158,8 @@ void ShowCurrent(void)
 {
 	currentDisplay[0]=SYMBOL_C;
 	currentDisplay[1]=SYMBOL_U;
-	currentDisplay[2]=SYMBOL_DASH;
-	currentDisplay[3]=SYMBOL_EMPTY;
+	currentDisplay[2]=SYMBOL_EMPTY;
+	currentDisplay[3]=SYMBOL_DASH;
 	currentDisplay[4]=digits[1]&SYMBOL_DP;
 	currentDisplay[5]=digits[2];
 }
