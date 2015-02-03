@@ -16,15 +16,13 @@
 #define SYMBOL_U 0xC1
 #define SYMBOL_DASH 0xBF
 #define SYMBOL_DP 0x7F
+#define SYMBOL_EMPTY 0xFF
 
 #define DATA 0
 #define SCL 1
 #define REC 2
 #define PORT_DISP PORTD
 #define DDR_DISP DDRD
-
-
-
 
 #define SetPortBit(port, bit) port |= (1<<bit)
 
