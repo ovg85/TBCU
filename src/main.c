@@ -3,6 +3,11 @@
 #include <display.h>
 #include <avr/interrupt.h>
 
+#include "OWIPolled.h"
+#include "OWIHighLevelFunctions.h"
+#include "OWIBitFunctions.h"
+#include "common_files\OWIcrc.h"
+
 #define HI 0
 #define LO 1
 #define CUR 2
@@ -13,6 +18,13 @@
 
 #define TCNT1_INITIAL 61535;
 
+#define FCPU 8000000
+
+//команды датчика DS18B20
+#define DS18B20_SKIP_ROM 0xcc
+#define DS18B20_CONVERT_T 0x44
+#define DS18B20_READ_SCRATCHPAD 0xbe
+#define DS18B20_BUS OWI_PIN_7
 //Init
 void Init (void);
 //Prepare data to send to display
@@ -28,12 +40,17 @@ void ShowCurrentDigit(void);
 //Sets Hi, Low or Current temperature to currentDisplay array
 void SetNextDisplayItem(void);
 
+void ReadSensorData(void);  
+
+
 //Current data to display
 char currentDisplay[]={0,0,0,0,0,0};
 // Current dislpayed digit (from 0 to 5)
 char currentDislpayIndex=0;
 // HI, Low or Current temperature
 char currentDislpayItemIndex=0;
+//Store ds18b20 data
+unsigned char scratchpad[9];
 
 int main(void)
 {
@@ -45,6 +62,7 @@ int main(void)
 	
 	while(1)
 	{
+		ReadSensorData();  
 
 	}
 	return 1;
@@ -77,6 +95,7 @@ void Init (void)
 	TIMSK |= (1<<TOIE1); 			//Timer/Counter1 Overflow Interrupt Enable
 	TCNT1 = TCNT1_INITIAL;        	// start counter value 
   
+	OWI_Init(DS18B20_BUS);
   
 	//for TIMER2_COMP_vect
 	//TCCR2=(1<<CS22)|(1<<CS21);	//Prescaler 256
@@ -84,6 +103,22 @@ void Init (void)
 	//TIMSK=(1<<OCIE2); 			//  Timer/Counter2 Output Compare Match Interrupt Enable
 	//OCR2 = 20; 					// interrupt at counter = 20
 	
+}
+
+void ReadSensorData(void)
+{
+	OWI_DetectPresence(DS18B20_BUS);
+	OWI_SkipRom(DS18B20_BUS);
+	OWI_SendByte(DS18B20_CONVERT_T ,DS18B20_BUS);
+		
+	_delay_ms(FCPU);
+	
+	OWI_DetectPresence(DS18B20_BUS);
+	OWI_SkipRom(DS18B20_BUS);
+	OWI_SendByte(DS18B20_READ_SCRATCHPAD, DS18B20_BUS);
+		
+	scratchpad[0] = OWI_ReceiveByte(DS18B20_BUS);
+	scratchpad[1] = OWI_ReceiveByte(DS18B20_BUS);
 }
 
 void ShowCurrentDigit(void)

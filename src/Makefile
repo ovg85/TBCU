@@ -50,7 +50,7 @@ MCU = atmega8
 #     calculate timings. Do NOT tack on a 'UL' at the end, this will be done
 #     automatically to create a 32-bit value in your source code.
 #     Typical values are:
-         F_CPU =  1000000
+#         F_CPU =  1000000
 #         F_CPU =  1843200
 #         F_CPU =  2000000
 #         F_CPU =  3686400
@@ -62,7 +62,7 @@ MCU = atmega8
 #         F_CPU = 16000000
 #         F_CPU = 18432000
 #         F_CPU = 20000000
-# F_CPU = 8000000
+ F_CPU = 8000000
 
 
 # Output format. (can be srec, ihex, binary)
@@ -80,7 +80,7 @@ OBJDIR = .
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = main.c display.c
+SRC = main.c display.c OWISWBitFunctions.c OWIHighLevelFunctions.c  OWIUARTBitFunctions.c  common_files/OWIcrc.c
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
@@ -614,6 +614,10 @@ $(shell mkdir $(OBJDIR) 2>/dev/null)
 .PHONY : all begin finish end sizebefore sizeafter gccversion \
 build elf hex eep lss sym coff extcoff \
 clean clean_list program debug gdb-config
+
+
+
+
 
 
 
