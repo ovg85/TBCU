@@ -41,6 +41,10 @@ void ShowCurrentDigit(void);
 void SetNextDisplayItem(void);
 
 void ReadSensorData(void);  
+void ConvertSensorData(void);
+
+//Fills currentDisplay array with sumbols (2-5) 
+void FillDisplayArray(signed char integerPart, unsigned char decimalPart);
 
 
 //Current data to display
@@ -51,6 +55,21 @@ char currentDislpayIndex=0;
 char currentDislpayItemIndex=0;
 //Store ds18b20 data
 unsigned char scratchpad[9];
+
+//Hi temperature
+signed char hi_integer=5;
+unsigned char hi_decimal=1;
+
+//Low temperature
+signed char low_integer=2;
+unsigned char low_decimal=7;
+
+//Current temperature
+signed char cur_integer=0;
+unsigned char cur_decimal=0;
+
+//0 - Off, 1 - On
+char currentHeaterMode=0;
 
 int main(void)
 {
@@ -63,7 +82,8 @@ int main(void)
 	while(1)
 	{
 		ReadSensorData();  
-
+		ConvertSensorData();
+		_delay_ms(2000);
 	}
 	return 1;
 }
@@ -85,7 +105,7 @@ void Init (void)
 	DDR_DISP=0x07;	//PD0-PD2 как выход
 	PORT_DISP=0x00;	//Первоначально выключаем выход
 	
-	TCCR0=(1<<CS01);		//Prescaler 8
+	TCCR0=(1<<CS02)|(1<<CS00);		//Prescaler 1024
 	TCNT0=0x00;				//initial counter = 0
 	TIMSK=(1<<TOIE0); 		//Timer/Counter0 Overflow Interrupt Enable
 	TIFR=(1<<TOV0);		//Timer/Counter0 Overflow Flag
@@ -111,7 +131,7 @@ void ReadSensorData(void)
 	OWI_SkipRom(DS18B20_BUS);
 	OWI_SendByte(DS18B20_CONVERT_T ,DS18B20_BUS);
 		
-	_delay_ms(FCPU);
+	_delay_ms(1100);
 	
 	OWI_DetectPresence(DS18B20_BUS);
 	OWI_SkipRom(DS18B20_BUS);
@@ -119,6 +139,27 @@ void ReadSensorData(void)
 		
 	scratchpad[0] = OWI_ReceiveByte(DS18B20_BUS);
 	scratchpad[1] = OWI_ReceiveByte(DS18B20_BUS);
+}
+
+void ConvertSensorData(void)
+{
+	//cur_integer = (scratchpad[0]&15);
+
+	char sign=1;
+	if ((scratchpad[1]&128) == 1)
+	{
+		sign=-1;
+		unsigned int tmp;
+		tmp = ((unsigned int)scratchpad[1]<<8)|scratchpad[0]; 
+		tmp = ~tmp + 1; 
+		scratchpad[0] = tmp;
+		scratchpad[1] = tmp>>8;  
+	}
+	cur_integer = sign*(((scratchpad[1]&7)<<4)|(scratchpad[0]>>4));
+	
+	cur_decimal = (scratchpad[0]&15);
+    cur_decimal = (cur_decimal<<1) + (cur_decimal<<3);// Умножаем на 10
+    cur_decimal = (cur_decimal>>4);//делим на 16 
 }
 
 void ShowCurrentDigit(void)
@@ -169,32 +210,69 @@ unsigned int GetDataToDisplay(void)
 	return data;
 }
 
+void FillDisplayArray(signed char integerPart, unsigned char decimalPart)
+{
+	if(integerPart<0)
+	{
+		currentDisplay[2]=SYMBOL_DASH;
+		if(integerPart<=-100 )
+		{
+			currentDisplay[3]=digits[9];
+			currentDisplay[4]=digits[9]&SYMBOL_DP;
+			currentDisplay[5]=digits[9];
+		}
+		else 
+		{
+			int index=(-1*integerPart)/10;
+			currentDisplay[3]=digits[index];
+			index=(-1*integerPart)%10;
+			currentDisplay[4]=digits[index]&SYMBOL_DP;
+			currentDisplay[5]=digits[decimalPart];
+		}
+	}
+	else
+	{
+		int index=integerPart/100;
+		if(index==0)
+		{
+			currentDisplay[2]=SYMBOL_EMPTY;
+		}
+		else
+		{
+			currentDisplay[2]=digits[index];
+		}
+		index=integerPart%100/10;
+		if(index==0)
+		{
+			currentDisplay[3]=SYMBOL_EMPTY;
+		}
+		else
+		{
+			currentDisplay[3]=digits[index];
+		}
+		index=integerPart%10;
+		currentDisplay[4]=digits[index]&SYMBOL_DP;
+		currentDisplay[5]=digits[decimalPart];
+	}
+}
+
 void ShowHi(void)
 {
 	currentDisplay[0]=SYMBOL_H;
 	currentDisplay[1]=SYMBOL_I;
-	currentDisplay[2]=SYMBOL_EMPTY;
-	currentDisplay[3]=digits[1];
-	currentDisplay[4]=digits[5]&SYMBOL_DP;
-	currentDisplay[5]=digits[4];
+	FillDisplayArray(hi_integer, hi_decimal);
 }
 
 void ShowLow(void)
 {
 	currentDisplay[0]=SYMBOL_L;
 	currentDisplay[1]=SYMBOL_O;
-	currentDisplay[2]=SYMBOL_EMPTY;
-	currentDisplay[3]=SYMBOL_DASH;
-	currentDisplay[4]=digits[2]&SYMBOL_DP;
-	currentDisplay[5]=digits[7];
+	FillDisplayArray(low_integer, low_decimal);
 }
 
 void ShowCurrent(void)
 {
 	currentDisplay[0]=SYMBOL_C;
 	currentDisplay[1]=SYMBOL_U;
-	currentDisplay[2]=SYMBOL_EMPTY;
-	currentDisplay[3]=SYMBOL_DASH;
-	currentDisplay[4]=digits[1]&SYMBOL_DP;
-	currentDisplay[5]=digits[2];
+	FillDisplayArray(cur_integer, cur_decimal);
 }
