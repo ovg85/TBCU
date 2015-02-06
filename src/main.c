@@ -46,7 +46,6 @@ void ConvertSensorData(void);
 //Fills currentDisplay array with sumbols (2-5) 
 void FillDisplayArray(signed char integerPart, unsigned char decimalPart);
 
-
 //Current data to display
 char currentDisplay[]={0,0,0,0,0,0};
 // Current dislpayed digit (from 0 to 5)
@@ -78,12 +77,13 @@ int main(void)
 	ShowHi();
 	
 	sei();
-	
+		
 	while(1)
 	{
 		ReadSensorData();  
 		ConvertSensorData();
-		_delay_ms(2000);
+		_delay_ms(1000);
+		
 	}
 	return 1;
 }
@@ -131,7 +131,8 @@ void ReadSensorData(void)
 	OWI_SkipRom(DS18B20_BUS);
 	OWI_SendByte(DS18B20_CONVERT_T ,DS18B20_BUS);
 		
-	_delay_ms(1100);
+	//_delay_ms(1000);
+	while (!OWI_ReadBit(DS18B20_BUS));
 	
 	OWI_DetectPresence(DS18B20_BUS);
 	OWI_SkipRom(DS18B20_BUS);
